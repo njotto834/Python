@@ -1,3 +1,5 @@
+#Simple Rock-Paper-Scissors game against the computer
+
 import random
 
 def play():
@@ -8,7 +10,7 @@ def play():
         return 'It\'s a tie'
     elif (is_win(user, computer)):
         return 'You Won!'
-        
+
     return 'You Lost'
     
 def is_win(player, opponent):
