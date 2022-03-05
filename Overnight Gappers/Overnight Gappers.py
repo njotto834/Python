@@ -26,7 +26,6 @@ while (i < len(df) - 1):
     '''
 
     if(calcGap(row1, row2) < -1): #Checks if the price went down by over 1% overnight
-        # result = pd.concat([result, row1, row2], axis=0)
         result = result.append(row1)
         result = result.append(row2)
     i += 1
