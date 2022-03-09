@@ -9,21 +9,31 @@ def calcGap(row1, row2):
     change = (open - close) / close * 100 #Calculates the percent change in price overnight
     return change
 
-df = yf.download('SPY', datetime(2000, 1, 1), datetime(2021, 1, 1))
-pd.set_option("display.max_rows", None, "display.max_columns", None)
+df = yf.download('SPY', datetime(2018, 1, 1), datetime(2019, 1, 1))
+df.drop('Volume', axis=1, inplace=True)
+df.drop('Adj Close', axis=1, inplace=True)
+
+#pd.set_option("display.max_rows", None, "display.max_columns", None)
+pd.set_option('display.max_rows', None)
+pd.set_option('display.max_columns', None)
+pd.set_option('display.width', 1000)
+pd.set_option('display.colheader_justify', 'center')
+pd.set_option('display.precision', 3)
 
 i = 0
 j = 1
-num = 0 #Variable to track the amount of times the price went down by >1% overnight in the time period.
-numIncrease = 0
-numDecrease = 0
+num = 0 #The amount of times the price went down by >1% overnight in the time period.
+numIncrease = 0 #Amount of times the price went up the day after it gapped down.
+numDecrease = 0 #Amount of times the price went down the day after it gapped down.
 avg = 0 #The average change in the price of SPY the day after the price gapped down.
-avgIncrease = 0
-avgDecrease= 0
-result = pd.DataFrame(columns=['Open', 'High', 'Low', 'Close', 'Adj Close', 'Volume'])
-increase = pd.DataFrame(columns=['Open', 'High', 'Low', 'Close', 'Adj Close', 'Volume'])
-decrease = pd.DataFrame(columns=['Open', 'High', 'Low', 'Close', 'Adj Close', 'Volume'])
+avgIncrease = 0 #The average increase in price the day after it gapped down.
+avgDecrease= 0#The average decrease in price the day after it gapped down.
 
+result = pd.DataFrame(columns=['Open', 'High', 'Low', 'Close', 'Percent Change'])
+increase = pd.DataFrame(columns=['Open', 'High', 'Low', 'Close', 'Percent Change'])
+decrease = pd.DataFrame(columns=['Open', 'High', 'Low', 'Close', 'Percent Change'])
+
+#Iterates through all of the data row by row
 while (i < len(df) - 1):
     row1 = df.iloc[[i]] #Gets the row at index i of DataFrame df
     row2 = df.iloc[[j]] #Gets the row at index j of DataFrame df
@@ -40,20 +50,35 @@ while (i < len(df) - 1):
         result = result.append(row1)
         result = result.append(row2)
         change = (close - open) / open * 100 #The change in price of SPY the day after the price gapped down in %.
-
+        result.iat[num, 4] = round(change, 2)
+        
         if (change < 0):
-            decrease = result.append(row1)
-            decrease = result.append(row2)
-            avgDecrease +=change
+            decrease = decrease.append(row1)
+            decrease = decrease.append(row2)
+            avgDecrease += change
+            indexDecrease = numDecrease
+
+            if (indexDecrease == 0):
+                decrease.iat[1, 4] = f"{round(change, 2)}%"
+            else:
+                decrease.iat[indexDecrease * 2 + 1, 4] = f"{round(change, 2)}%"
+
             numDecrease += 1
+
         elif (change > 0):
-            increase = result.append(row1)
-            increase = result.append(row2)
+            increase = increase.append(row1)
+            increase = increase.append(row2)
             avgIncrease += change
+            indexIncrease = numIncrease
+
+            if (indexIncrease == 0):
+                increase.iat[1, 4] = f"{round(change, 2)}%"
+            else:
+                increase.iat[indexIncrease * 2 + 1, 4] = f"{round(change, 2)}%"
+
             numIncrease += 1
 
         avg += change
-        #print(f"{round(change, 2)}%")
         num += 1
     i += 1
     j += 1
@@ -70,6 +95,8 @@ print(decrease)
 
 print("Days the price increased: ")
 print(increase)
+
+# print(result)
 
 print(f"Average change in price: {avg}%")
 print(f"Average decrease in price: {avgDecrease}%")
